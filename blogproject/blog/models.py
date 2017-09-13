@@ -19,6 +19,7 @@ class Post(models.Model):
     body = models.TextField()
     created_time = models.DateTimeField()
     modified_time = models.DateTimeField()
+    views = models.IntegerField()
     # 摘要
     excerpt = models.CharField(max_length=256,blank=True)
 
@@ -28,10 +29,17 @@ class Post(models.Model):
 
     author = models.ForeignKey(User)
 
+    class Meta:
+        ordering = ['-created_time', '-modified_time']
+
     def get_absolute_url(self):
         return reverse('blog:detail',kwargs={'pk':self.pk})
 
     def __str__(self):
         return self.title
+
+    def increaseViews(self):
+        self.views += 1
+        self.save(update_fields=['views'])
 
 
