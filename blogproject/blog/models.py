@@ -1,5 +1,7 @@
 from django.db import models
 from django.urls import reverse
+from markdown import Markdown
+from django.utils.html import strip_tags
 # User是一个自带的模型类，里面是用户的字段
 from django.contrib.auth.models import User
 
@@ -19,6 +21,7 @@ class Post(models.Model):
     body = models.TextField()
     created_time = models.DateTimeField()
     modified_time = models.DateTimeField()
+    views = models.IntegerField()
     # 摘要
     excerpt = models.CharField(max_length=256,blank=True)
 
@@ -28,10 +31,26 @@ class Post(models.Model):
 
     author = models.ForeignKey(User)
 
+    class Meta:
+        ordering = ['-created_time', '-modified_time']
+
     def get_absolute_url(self):
         return reverse('blog:detail',kwargs={'pk':self.pk})
 
     def __str__(self):
         return self.title
+
+    def increase_views(self):
+        self.views += 1
+        self.save(update_fields=['views'])
+
+    def save(self, *args, **kwargs):
+        if not self.excerpt:
+            md = Markdown(extensions={
+                'markdown.extensions.extra',
+                'markdown.extensions.codehilite'
+            })
+            self.excerpt = strip_tags(md.convert(self.body))[:32]
+        super().save(*args, **kwargs)
 
 
