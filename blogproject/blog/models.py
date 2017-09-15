@@ -21,7 +21,7 @@ class Post(models.Model):
     body = models.TextField()
     created_time = models.DateTimeField()
     modified_time = models.DateTimeField()
-    views = models.IntegerField()
+    views = models.IntegerField(default=0)
     # 摘要
     excerpt = models.CharField(max_length=256,blank=True)
 
