@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'blog',
     'comment',
     'haystack',
+    'users',
 ]
 
 HAYSTACK_CONNECTIONS={
