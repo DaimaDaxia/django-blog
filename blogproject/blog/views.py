@@ -1,6 +1,9 @@
 from django.shortcuts import render,get_object_or_404
 from django.views.generic import ListView, DetailView
-from markdown import markdown
+from django.utils.text import slugify
+from django.db.models import Q
+from markdown import markdown, Markdown
+from markdown.extensions.toc import TocExtension
 
 from .models import Post, Category, Tag
 from comment.models import Comment
@@ -79,11 +82,13 @@ class PostDetailView(DetailView):
 
     def get_object(self, queryset=None):
         post = super().get_object()
-        post.body = markdown(post.body, extensions=[
+        md = Markdown(extensions=[
             'markdown.extensions.extra',
             'markdown.extensions.codehilite',
-            'markdown.extensions.toc'
+            TocExtension(slugify=slugify)
         ])
+        post.body = md.convert(post.body)
+        post.toc = md.toc
         return post
 
     def get_context_data(self, **kwargs):
@@ -110,5 +115,15 @@ class TagView(IndexView):
     def get_queryset(self):
         tag = get_object_or_404(Tag, pk=self.kwargs.get('tag_pk'))
         return super().get_queryset().filter(tags=tag)
+
+def search(request):
+    search_info = request.GET.get('search_info')
+    error_msg = ''
+    if not search_info:
+        error_msg = "请输入关键词"
+        return render(request, 'blog/index.html', {'error_msg':error_msg})
+    post_list = Post.objects.filter(Q(title__icontains=search_info) | Q(body__icontains=search_info))
+    return render(request, 'blog/index.html', {'post_list':post_list})
+
 
 
